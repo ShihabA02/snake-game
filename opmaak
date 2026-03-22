@@ -1,0 +1,66 @@
+# DYNAMIEK van het spel: slang bewegen, botsingen detecteren, eten spawnen
+    def update(self, dt):
+        if self.phase != "playing":
+            return
+
+        self.tick_timer += dt
+        if self.tick_timer < 1.0 / self.speed:
+            return
+        self.tick_timer = 0
+
+        self.direction = self.next_dir
+        dx, dy = self.direction
+        head   = self.snake[0]
+        nx     = head.x + dx
+        ny     = head.y + dy
+
+        # Botsing met de muur. Game Over
+        if nx < 0 or nx >= GRID_SIZE or ny < 0 or ny >= GRID_SIZE:
+            self.phase = "dead"
+            return
+
+        # Botsing met zichzelf. Game Over
+        if (nx, ny) in self._occupied():
+            self.phase = "dead"
+            return
+
+        # Beweeg: nieuwe kop invoegen, kleuren bijwerken
+        self.snake.insert(0, SnakeSegment(nx, ny, is_head=True))
+        self.snake[1].is_head = False
+        self.snake[1].color   = BODY_COLOR
+
+        # Eten opeten
+        if nx == self.food.x and ny == self.food.y:
+            self.score += 10
+            self.speed  = min(18, INIT_SPEED + self.score // 30)
+            self.food   = self._spawn_food()
+        else:
+            self.snake.pop()
+
+    # Uiterlijk: grid, slang, eten en score. 
+    def draw(self):
+        self.screen.fill(BG)
+        self._draw_grid()
+        self._draw_hud()
+
+        
+        self.food.draw(self.screen)
+        for seg in reversed(self.snake):
+            seg.draw(self.screen)
+
+        
+        if self.phase == "start":
+            self._draw_overlay("SNAKE",
+                               ["rode punt is eten en zorgt dat de slang langer wordt",
+                                "Pijltjestoetsen of WASD om te bewegen",
+                                "",
+                                "DRUK OP SPATIE OF ENTER"],
+                               HEAD_COLOR)
+        elif self.phase == "dead":
+            self._draw_overlay("GAME OVER",
+                               [f"Score: {self.score}",
+                                "",
+                                "DRUK OP SPATIE OM OPNIEUW TE SPELEN"],
+                               FOOD_COLOR)
+
+        pygame.display.flip()
