@@ -20,11 +20,6 @@ cd snake-game
 2. Installeer de benodigde packages:
 ```bash
 pip install pygame
-```
-Of via requirements.txt:
-```bash
-pip install -r requirements.txt
-```
  
 3. Start het spel:
 ```bash
